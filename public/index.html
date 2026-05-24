@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Brand Kit Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    @keyframes shimmer { 0% { background-position: 0%; } 100% { background-position: 200%; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .animate-shimmer { animation: shimmer 3s linear infinite; background-size: 200%; }
+    .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+    .gradient-text { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 min-h-screen">
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [blueprint, setBlueprint] = useState('');
+      const [brandKit, setBrandKit] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      const generate = async () => {
+        if (!blueprint.trim()) {
+          setError('Please enter a business blueprint');
+          return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+          const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blueprint })
+          });
+          const data = await res.json();
+          if (data.success) setBrandKit(data.brandKit);
+          else setError(data.error);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="text-center mb-12 animate-fade-in">
+            <h1 className="text-7xl font-black gradient-text mb-4 animate-shimmer">AI Brand Kit</h1>
+            <p className="text-2xl font-bold text-cyan-300">✨ Transform your Idea into Premium Brand ✨</p>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 mb-8 border-2 border-cyan-500/30 hover:border-cyan-400/50 transition-all">
+            <label className="block text-2xl font-black text-cyan-300 mb-4">Your Business Blueprint</label>
+            <textarea
+              value={blueprint}
+              onChange={(e) => setBlueprint(e.target.value)}
+              placeholder="Example: AI-powered fitness app for busy professionals..."
+              className="w-full h-40 p-6 bg-slate-800/50 border-2 border-blue-400/30 rounded-2xl text-white placeholder-slate-400 resize-none focus:border-cyan-400 focus:outline-none"
+            />
+            {error && <div className="mt-4 p-4 bg-red-500/20 border-2 border-red-400 rounded-xl text-red-300">{error}</div>}
+            <button
+              onClick={generate}
+              disabled={loading}
+              className="mt-6 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white py-5 rounded-2xl font-black text-xl hover:scale-105 transition-all disabled:opacity-50"
+            >
+              {loading ? '⚡ Generating...' : '🚀 Generate Brand Kit'}
+            </button>
+          </div>
+
+          {brandKit && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl rounded-3xl p-8 border-2 border-cyan-400/30">
+                <h2 className="text-4xl font-black text-cyan-300 mb-6">✨ {brandKit.businessName}</h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-slate-800/50 rounded-xl p-4 border border-cyan-400/20">
+                    <p className="text-cyan-400 font-bold text-sm mb-1">INDUSTRY</p>
+                    <p className="text-white text-lg">{brandKit.industry}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-400/20">
+                    <p className="text-blue-400 font-bold text-sm mb-1">TARGET</p>
+                    <p className="text-white text-lg">{brandKit.targetAudience}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-3xl p-10 text-center">
+                <h2 className="text-5xl font-black text-white mb-4">🎉 Brand Kit Ready!</h2>
+                <button
+                  onClick={() => {
+                    const blob = new Blob([JSON.stringify(brandKit, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${brandKit.businessName.replace(/\s+/g, '-')}-brand-kit.json`;
+                    a.click();
+                  }}
+                  className="bg-white text-blue-600 px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all"
+                >
+                  ⬇️ Download Brand Kit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

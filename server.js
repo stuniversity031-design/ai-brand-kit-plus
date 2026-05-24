@@ -1,0 +1,45 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+app.post('/api/generate', async (req, res) => {
+  try {
+    const { blueprint } = req.body;
+
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'grok-beta',
+        messages: [{
+          role: 'user',
+          content: `Create a brand kit for: ${blueprint}. Return ONLY valid JSON with this structure: {"businessName":"Name","industry":"Industry","targetAudience":"Audience","valueProposition":"Value","logos":[{"name":"Primary","description":"Desc","usage":"Usage","style":"Style"}],"colorPalette":{"primary":{"hex":"#6366F1","name":"Color","usage":"Usage"},"secondary":{"hex":"#8B5CF6","name":"Color","usage":"Usage"},"accent":{"hex":"#EC4899","name":"Color","usage":"Usage"},"neutral":[{"hex":"#1F2937","name":"Dark"}]},"typography":{"heading":{"font":"Font","weights":["700"],"usage":"Usage"},"body":{"font":"Font","weights":["400"],"usage":"Usage"}},"brandVoice":{"personality":["Trait1"],"tone":"Tone","tagline":"Tagline","elevatorPitch":"Pitch","keyMessages":["Msg1"]},"socialAssets":[{"type":"Profile","description":"Desc","dimensions":"1080x1080px"}],"contentThemes":["Theme1"]}`
+        }],
+        temperature: 0.7
+      })
+    });
+
+    const data = await response.json();
+    let content = data.choices[0].message.content;
+    
+    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    const brandKit = JSON.parse(content);
+
+    res.json({ success: true, brandKit });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
