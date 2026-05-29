@@ -6,116 +6,285 @@
   <title>AI Brand Kit Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-    @keyframes shimmer { 0% { background-position: 0%; } 100% { background-position: 200%; } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+    @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(6,182,212,0.3)} 50%{box-shadow:0 0 40px rgba(6,182,212,0.6)} }
     .animate-float { animation: float 3s ease-in-out infinite; }
-    .animate-shimmer { animation: shimmer 3s linear infinite; background-size: 200%; }
-    .animate-fade-in { animation: fadeIn 0.6s ease-out; }
-    .gradient-text { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .animate-shimmer { animation: shimmer 3s linear infinite; background-size:200%; }
+    .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+    .gradient-text { background: linear-gradient(135deg,#06b6d4 0%,#3b82f6 50%,#8b5cf6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); border:1.5px solid rgba(6,182,212,0.2); transition:all 0.3s ease; }
+    .card:hover { border-color:rgba(6,182,212,0.5); transform:translateY(-2px); }
+    .color-swatch { width:100%; height:80px; border-radius:12px; cursor:pointer; transition:transform 0.3s; }
+    .color-swatch:hover { transform:scale(1.08) rotate(3deg); }
+    body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); min-height:100vh; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 min-h-screen">
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel">
-    const { useState } = React;
+<body>
+<div class="max-w-6xl mx-auto px-4 py-10">
 
-    function App() {
-      const [blueprint, setBlueprint] = useState('');
-      const [brandKit, setBrandKit] = useState(null);
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState('');
+  <!-- Header -->
+  <div class="text-center mb-12 animate-fade-in">
+    <div class="text-6xl mb-3 animate-float">👑</div>
+    <h1 class="text-6xl font-black gradient-text animate-shimmer mb-3">AI Brand Kit</h1>
+    <p class="text-cyan-300 text-xl font-semibold">✨ Transform your Idea into Premium Brand ✨</p>
+  </div>
 
-      const generate = async () => {
-        if (!blueprint.trim()) {
-          setError('Please enter a business blueprint');
-          return;
-        }
-        setLoading(true);
-        setError('');
-        try {
-          const res = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blueprint })
-          });
-          const data = await res.json();
-          if (data.success) setBrandKit(data.brandKit);
-          else setError(data.error);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
+  <!-- Input -->
+  <div class="card rounded-3xl p-8 mb-8">
+    <label class="block text-cyan-300 text-xl font-black mb-4">🧠 Your Business Blueprint</label>
+    <textarea id="blueprint" rows="4" placeholder="Example: AI-powered fitness coach for busy professionals..."
+      class="w-full p-5 rounded-2xl bg-slate-800/60 border-2 border-blue-400/30 text-white placeholder-slate-400 text-lg focus:border-cyan-400 focus:outline-none resize-none"></textarea>
+    <div id="error" class="hidden mt-4 p-4 bg-red-500/20 border-2 border-red-400 rounded-xl text-red-300"></div>
+    <button onclick="generate()" id="btn"
+      class="mt-5 w-full py-5 rounded-2xl font-black text-xl text-white bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:scale-105 active:scale-95 transition-all">
+      🚀 Generate Premium Brand Kit
+    </button>
+  </div>
 
-      return (
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="text-center mb-12 animate-fade-in">
-            <h1 className="text-7xl font-black gradient-text mb-4 animate-shimmer">AI Brand Kit</h1>
-            <p className="text-2xl font-bold text-cyan-300">✨ Transform your Idea into Premium Brand ✨</p>
-          </div>
+  <!-- Output -->
+  <div id="output" class="hidden space-y-6">
 
-          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 mb-8 border-2 border-cyan-500/30 hover:border-cyan-400/50 transition-all">
-            <label className="block text-2xl font-black text-cyan-300 mb-4">Your Business Blueprint</label>
-            <textarea
-              value={blueprint}
-              onChange={(e) => setBlueprint(e.target.value)}
-              placeholder="Example: AI-powered fitness app for busy professionals..."
-              className="w-full h-40 p-6 bg-slate-800/50 border-2 border-blue-400/30 rounded-2xl text-white placeholder-slate-400 resize-none focus:border-cyan-400 focus:outline-none"
-            />
-            {error && <div className="mt-4 p-4 bg-red-500/20 border-2 border-red-400 rounded-xl text-red-300">{error}</div>}
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="mt-6 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white py-5 rounded-2xl font-black text-xl hover:scale-105 transition-all disabled:opacity-50"
-            >
-              {loading ? '⚡ Generating...' : '🚀 Generate Brand Kit'}
-            </button>
-          </div>
-
-          {brandKit && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl rounded-3xl p-8 border-2 border-cyan-400/30">
-                <h2 className="text-4xl font-black text-cyan-300 mb-6">✨ {brandKit.businessName}</h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-cyan-400/20">
-                    <p className="text-cyan-400 font-bold text-sm mb-1">INDUSTRY</p>
-                    <p className="text-white text-lg">{brandKit.industry}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-400/20">
-                    <p className="text-blue-400 font-bold text-sm mb-1">TARGET</p>
-                    <p className="text-white text-lg">{brandKit.targetAudience}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-3xl p-10 text-center">
-                <h2 className="text-5xl font-black text-white mb-4">🎉 Brand Kit Ready!</h2>
-                <button
-                  onClick={() => {
-                    const blob = new Blob([JSON.stringify(brandKit, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${brandKit.businessName.replace(/\s+/g, '-')}-brand-kit.json`;
-                    a.click();
-                  }}
-                  className="bg-white text-blue-600 px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all"
-                >
-                  ⬇️ Download Brand Kit
-                </button>
-              </div>
-            </div>
-          )}
+    <!-- Overview -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(234,179,8,0.3)">
+      <h2 class="text-3xl font-black text-yellow-300 mb-6 flex items-center gap-3">👑 Brand Overview</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-yellow-400/10 rounded-2xl p-5 border border-yellow-400/20">
+          <p class="text-yellow-400 text-xs font-black uppercase mb-1">Business Name</p>
+          <p id="biz-name" class="text-white text-2xl font-black"></p>
         </div>
-      );
-    }
+        <div class="bg-yellow-400/10 rounded-2xl p-5 border border-yellow-400/20">
+          <p class="text-yellow-400 text-xs font-black uppercase mb-1">Industry</p>
+          <p id="industry" class="text-white text-lg font-semibold"></p>
+        </div>
+        <div class="bg-yellow-400/10 rounded-2xl p-5 border border-yellow-400/20">
+          <p class="text-yellow-400 text-xs font-black uppercase mb-1">Target Audience</p>
+          <p id="audience" class="text-white text-lg font-semibold"></p>
+        </div>
+        <div class="bg-yellow-400/10 rounded-2xl p-5 border border-yellow-400/20">
+          <p class="text-yellow-400 text-xs font-black uppercase mb-1">Value Proposition</p>
+          <p id="value-prop" class="text-white text-lg font-semibold"></p>
+        </div>
+      </div>
+    </div>
 
-    ReactDOM.render(<App />, document.getElementById('root'));
-  </script>
+    <!-- Tagline & Pitch -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(6,182,212,0.3)">
+      <h2 class="text-3xl font-black text-cyan-300 mb-6">⚡ Brand Voice</h2>
+      <div class="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-6 mb-4 border border-cyan-400/30">
+        <p class="text-cyan-400 text-xs font-black uppercase mb-2">Tagline</p>
+        <p id="tagline" class="text-white text-3xl font-black"></p>
+      </div>
+      <div class="bg-slate-800/50 rounded-2xl p-5 border border-blue-400/20 mb-4">
+        <p class="text-blue-400 text-xs font-black uppercase mb-2">Elevator Pitch</p>
+        <p id="pitch" class="text-white text-lg leading-relaxed"></p>
+      </div>
+      <div class="mb-4">
+        <p class="text-cyan-400 text-xs font-black uppercase mb-3">Personality Traits</p>
+        <div id="traits" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div>
+        <p class="text-cyan-400 text-xs font-black uppercase mb-3">Key Messages</p>
+        <div id="key-messages" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- Logo Concepts -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(139,92,246,0.3)">
+      <h2 class="text-3xl font-black text-purple-300 mb-6">🎨 Logo Concepts</h2>
+      <div id="logos" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- Color Palette -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(236,72,153,0.3)">
+      <h2 class="text-3xl font-black text-pink-300 mb-6">🎨 Color Palette</h2>
+      <div id="colors" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"></div>
+      <p class="text-pink-400 text-xs font-black uppercase mb-3">Neutral Colors</p>
+      <div id="neutrals" class="flex flex-wrap gap-3"></div>
+    </div>
+
+    <!-- Typography -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(234,179,8,0.3)">
+      <h2 class="text-3xl font-black text-yellow-300 mb-6">✍️ Typography</h2>
+      <div id="typography" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+
+    <!-- Social Assets -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(6,182,212,0.3)">
+      <h2 class="text-3xl font-black text-cyan-300 mb-6">📱 Social Media Assets</h2>
+      <div id="social" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+
+    <!-- Content Themes -->
+    <div class="card rounded-3xl p-8 animate-fade-in" style="border-color:rgba(139,92,246,0.3)">
+      <h2 class="text-3xl font-black text-purple-300 mb-6">💡 Content Themes</h2>
+      <div id="themes" class="grid grid-cols-2 gap-3"></div>
+    </div>
+
+    <!-- Download -->
+    <div class="rounded-3xl p-10 text-center animate-fade-in" style="background:linear-gradient(135deg,#06b6d4,#3b82f6,#8b5cf6)">
+      <div class="text-5xl mb-4">🎉</div>
+      <h2 class="text-4xl font-black text-white mb-3">Brand Kit Complete!</h2>
+      <p class="text-white/80 text-lg mb-6">Your full premium brand package is ready</p>
+      <button onclick="downloadKit()"
+        class="bg-white text-blue-600 px-10 py-4 rounded-2xl font-black text-xl hover:scale-110 active:scale-95 transition-all shadow-2xl">
+        ⬇️ Download Brand Kit
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentKit = null;
+
+  async function generate() {
+    const blueprint = document.getElementById('blueprint').value.trim();
+    const btn = document.getElementById('btn');
+    const errEl = document.getElementById('error');
+
+    if (!blueprint) { showError('Please enter a business blueprint'); return; }
+
+    btn.textContent = '⚡ Generating...';
+    btn.disabled = true;
+    errEl.classList.add('hidden');
+    document.getElementById('output').classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blueprint })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      currentKit = data.brandKit;
+      renderKit(data.brandKit);
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.textContent = '🚀 Generate Premium Brand Kit';
+      btn.disabled = false;
+    }
+  }
+
+  function renderKit(k) {
+    // Overview
+    document.getElementById('biz-name').textContent = k.businessName || '';
+    document.getElementById('industry').textContent = k.industry || '';
+    document.getElementById('audience').textContent = k.targetAudience || '';
+    document.getElementById('value-prop').textContent = k.valueProposition || '';
+
+    // Brand Voice
+    document.getElementById('tagline').textContent = k.brandVoice?.tagline || '';
+    document.getElementById('pitch').textContent = k.brandVoice?.elevatorPitch || '';
+
+    const traits = document.getElementById('traits');
+    traits.innerHTML = (k.brandVoice?.personality || []).map(t =>
+      `<span class="bg-cyan-500/20 text-cyan-200 px-4 py-1 rounded-full font-bold border border-cyan-400/30">${t}</span>`
+    ).join('');
+
+    const msgs = document.getElementById('key-messages');
+    msgs.innerHTML = (k.brandVoice?.keyMessages || []).map((m, i) =>
+      `<div class="flex items-start gap-3 bg-blue-400/10 rounded-xl p-3 border border-blue-400/20">
+        <span class="w-7 h-7 bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm font-black flex-shrink-0">${i+1}</span>
+        <span class="text-white/90">${m}</span>
+      </div>`
+    ).join('');
+
+    // Logos
+    const logos = document.getElementById('logos');
+    logos.innerHTML = (k.logos || []).map(l =>
+      `<div class="bg-purple-500/10 rounded-2xl p-5 border border-purple-400/20 hover:scale-105 transition-all cursor-pointer">
+        <div class="bg-gradient-to-br from-purple-500 to-blue-600 h-28 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+          <span class="text-5xl font-black text-white">${l.name.charAt(0)}</span>
+        </div>
+        <p class="text-white font-black text-lg">${l.name}</p>
+        <p class="text-purple-200 text-sm mt-1">${l.description}</p>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <span class="text-xs bg-purple-500/30 text-purple-200 px-2 py-1 rounded-full border border-purple-400/30">${l.style}</span>
+          <span class="text-xs bg-blue-500/30 text-blue-200 px-2 py-1 rounded-full border border-blue-400/30">${l.usage}</span>
+        </div>
+      </div>`
+    ).join('');
+
+    // Colors
+    const colors = document.getElementById('colors');
+    const palette = k.colorPalette || {};
+    const mainColors = ['primary','secondary','accent'];
+    colors.innerHTML = mainColors.map(type => {
+      const c = palette[type];
+      if (!c) return '';
+      return `<div class="bg-slate-800/50 rounded-2xl p-4 border border-pink-400/20 hover:scale-105 transition-all cursor-pointer">
+        <div class="color-swatch mb-3 shadow-lg" style="background:${c.hex}"></div>
+        <p class="text-pink-300 text-xs font-black uppercase mb-1">${type}</p>
+        <p class="text-white font-black">${c.name}</p>
+        <p class="text-yellow-300 font-mono text-sm">${c.hex}</p>
+        <p class="text-white/60 text-xs mt-1">${c.usage}</p>
+      </div>`;
+    }).join('');
+
+    const neutrals = document.getElementById('neutrals');
+    neutrals.innerHTML = (palette.neutral || []).map(n =>
+      `<div class="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3 border border-slate-600/30 hover:scale-110 transition-all cursor-pointer">
+        <div class="w-12 h-12 rounded-xl border-2 border-white/20" style="background:${n.hex}"></div>
+        <div>
+          <p class="text-white font-bold text-sm">${n.name}</p>
+          <p class="text-yellow-300 font-mono text-xs">${n.hex}</p>
+        </div>
+      </div>`
+    ).join('');
+
+    // Typography
+    const typo = document.getElementById('typography');
+    typo.innerHTML = Object.entries(k.typography || {}).map(([type, t]) =>
+      `<div class="bg-yellow-400/10 rounded-2xl p-5 border border-yellow-400/20 hover:scale-105 transition-all">
+        <p class="text-yellow-400 text-xs font-black uppercase mb-2">${type}</p>
+        <p class="text-white text-2xl font-black">${t.font}</p>
+        <div class="flex gap-2 mt-2 flex-wrap">
+          ${(t.weights||[]).map(w => `<span class="text-xs bg-yellow-500/20 text-yellow-200 px-2 py-1 rounded-full border border-yellow-400/30">${w}</span>`).join('')}
+        </div>
+        <p class="text-white/60 text-sm mt-2">${t.usage}</p>
+      </div>`
+    ).join('');
+
+    // Social
+    const social = document.getElementById('social');
+    social.innerHTML = (k.socialAssets || []).map(a =>
+      `<div class="bg-cyan-400/10 rounded-2xl p-5 border border-cyan-400/20 hover:scale-105 transition-all">
+        <p class="text-white font-black text-lg">${a.type}</p>
+        <p class="text-cyan-200 text-sm mt-1">${a.description}</p>
+        <span class="inline-block mt-3 text-xs bg-blue-500/30 text-blue-200 px-3 py-1 rounded-full border border-blue-400/30">${a.dimensions}</span>
+      </div>`
+    ).join('');
+
+    // Themes
+    const themes = document.getElementById('themes');
+    themes.innerHTML = (k.contentThemes || []).map(t =>
+      `<div class="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl p-4 border border-purple-400/20 hover:scale-105 transition-all cursor-pointer">
+        <p class="text-white font-semibold">💡 ${t}</p>
+      </div>`
+    ).join('');
+
+    document.getElementById('output').classList.remove('hidden');
+  }
+
+  function downloadKit() {
+    if (!currentKit) return;
+    const blob = new Blob([JSON.stringify(currentKit, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentKit.businessName.replace(/\s+/g,'-')}-brand-kit.json`;
+    a.click();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+</script>
 </body>
 </html>
